@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<launch>
+  <!-- Arguments -->
+  <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+  <arg name="open_rviz" default="true"/>
+  <arg name="move_forward_only" default="false"/>
+  <arg name="slam_methods" default="gmapping" doc="slam type [gmapping, cartographer, hector, karto, frontier_exploration]"/>
+  <arg name="configuration_basename" default="turtlebot3_lds_2d.lua"/>
+  <!-- Start position of waffle robot in scene. -->
+  <arg name="x_pos" default="-3.0" doc="Starting x coordinate of the robot in the simulation scene. "/>
+  <arg name="y_pos" default="1.0"  doc="Starting y coordinate of the robot in the simulation scene. "/>
+  <arg name="z_pos" default="0.0"  doc="Starting z coordinate of the robot in the simulation scene. "/>
+
+  <!-- Start gazebo server with turtlebot3_house scene. -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <!-- Documentation taken from http://gazebosim.org/tutorials?tut=ros_roslaunch-->
+    <!--arg name="world_name" value="$(find turtlebot3_gazebo)/worlds/turtlebot3_world.world"/-->
+    <arg name="world_name" value="$(find turtlebot3_gazebo)/worlds/turtlebot3_house.world"/>
+    <!--arg name="world_name" value="worlds/cafe.world"/-->
+    <arg name="paused" value="false"/> <!--S tart Gazebo in a paused state-->
+    <arg name="use_sim_time" value="true"/> <!-- Tells ROS nodes asking for time to get the Gazebo-published simulation time, published over the ROS topic /clock-->
+    <arg name="gui" value="true"/> <!-- Launch the user interface window of Gazebo-->
+    <arg name="headless" value="false"/> <!-- Enable gazebo state log recording-->
+    <arg name="debug" value="false"/> <!-- Start gzserver (Gazebo Server) in debug mode using gdb-->
+  </include>
+
+  <!-- Load robot_description param for tf, rviz and gazebo spawn. -->
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_waffle_pi.urdf.xacro"/>
+
+  <!-- Spawn turtlebot into gazebo based on robot_description. -->
+  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model"
+        args="-urdf -model turtlebot3 -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description"/>
+
+  <node name="map_to_velo_init" pkg="nuise" type="map_helper_ros"/>
+  <node name="nuise" pkg="nuise" type="nuise"/>
+          
+  <!-- Publish turtlebot3 tf's. -->
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="waffle_state_publisher">
+    <param name="publish_frequency" type="double" value="80.0" />
+    <!--param name="tf_prefix" value="$(arg multi_robot_name)"/-->
+  </node>
+  <param name="/error1" type="int" value="0" />
+  <!-- SLAM: Gmapping, Cartographer, Hector, Karto, Frontier_exploration, RTAB-Map -->
+  <include file="$(find elevation_mapping_demos)/launch/turtlebot3_$(arg slam_methods).launch">
+    <arg name="model" value="$(arg model)"/>
+    <arg name="configuration_basename" value="$(arg configuration_basename)"/>
+  </include>
+
+
+  <!-- AMCL >
+  <include file="$(find elevation_mapping_demos)/launch/amcl.launch"/-->
+  
+  <!-- Gmapping -->
+  <!--include file="$(find gmapping)/launch/slam_gmapping_pr2.launch"/-->
+
+  <!-- move_base -->
+  <include file="$(find nuise)/launch/move_base.launch">
+    <arg name="model" value="$(arg model)" />
+    <arg name="move_forward_only" value="$(arg move_forward_only)"/>
+  </include>
+  
+  <!--include file="$(find linefit_ground_segmentation_ros)/launch/segmentation.launch">
+  </include>
+  
+  <include file="$(find aloam_velodyne)/launch/aloam_velodyne_HDL_32.launch">
+  
+  </include-->
+  <!-- Launch RViz with the demo configuration. -->
+  <group if="$(arg open_rviz)"> 
+    <node pkg="rviz" type="rviz" name="rviz" required="true"
+          args="-d $(find elevation_mapping_demos)/rviz/turtlebot3_waffle_demo.rviz"/>
+  </group>
+
+</launch>

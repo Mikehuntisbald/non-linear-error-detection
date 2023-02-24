@@ -1,0 +1,9 @@
+<launch>
+
+    <node pkg="rs_to_velodyne" type="rs_to_velodyne" name="rs_to_velodyne" output="screen" required="true" args="XYZI XYZI">
+        <!-- <param name="frame_id" value="rslidar" /> -->
+        <param name="sub_tp" value="/rslidar_points" />
+        <param name="pub_tp" value="/rslidar_velo_points" />
+    </node>
+
+</launch>

@@ -1,0 +1,15 @@
+obstacle_range: 3.0
+raytrace_range: 3.5
+
+footprint: [[-0.205, -0.155], [-0.205, 0.155], [0.077, 0.155], [0.077, -0.155]]
+#robot_radius: 0.17
+
+inflation_radius: 1.0
+cost_scaling_factor: 3.0
+
+map_type: costmap
+#observation_sources: scan
+#scan: {sensor_frame: laser, data_type: LaserScan, topic: scan, inf_is_valid: true, marking: true, clearing: true}
+
+observation_sources: obstacle_cloud
+scan: {sensor_frame: velodyne, data_type: PointCloud2, topic: obstacle_cloud, inf_is_valid: false, marking: true, clearing: true}
