@@ -6,3 +6,5 @@ roslaunch nuise turtlebot3_slam.launch \
 roslaunch aloam_velodyne aloam_velodyne_HDL_32.launch \
 rosrun nuise nuise \
 rosrun follower follower \
+
+Depend on turtlebot3_gazebo turtlebot3_teleop(modified) gmapping
